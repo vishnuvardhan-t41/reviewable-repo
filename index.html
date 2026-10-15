@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f8">
+  <meta name="description" content="A practical, visual guide to Jev: what the System One model does, how its typed decisions work, and how to use the API.">
+  <title>Jev Model — A practical guide</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17283b;
+      --muted: #627184;
+      --paper: #f4f6f8;
+      --white: #fff;
+      --line: #dfe5eb;
+      --blue: #4168f5;
+      --blue-dark: #244be1;
+      --mint: #85e7ca;
+      --night: #101e2b;
+      --night-2: #1a2c3d;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 20px 55px rgba(23, 40, 59, .08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    button { font: inherit; }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+    .topbar { position: sticky; z-index: 10; top: 0; border-bottom: 1px solid rgba(222, 229, 235, .85); background: rgba(244, 246, 248, .88); backdrop-filter: blur(18px); }
+    .nav { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; font-size: 14px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-mark { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; color: white; background: var(--blue); font-size: 15px; font-weight: 800; box-shadow: 0 5px 13px rgba(65,104,245,.24); }
+    .brand small { display: block; color: #8793a1; font-size: 10px; font-weight: 650; letter-spacing: .13em; line-height: 1.1; text-transform: uppercase; }
+    .nav-links { display: flex; align-items: center; gap: 29px; }
+    .nav-links a { color: #526174; font-size: 13px; font-weight: 600; text-decoration: none; transition: color .18s ease; }
+    .nav-links a:hover { color: var(--blue-dark); }
+    .nav-cta { padding: 9px 14px; border: 1px solid #ccd5df; border-radius: 10px; background: #fff; color: var(--ink) !important; }
+    .hero { position: relative; overflow: hidden; padding: 74px 0 80px; background: radial-gradient(ellipse at 84% 36%, rgba(82,121,255,.12), transparent 36%), linear-gradient(180deg, #f8fafb 0%, var(--paper) 100%); }
+    .hero:before { position: absolute; top: -190px; right: -140px; width: 590px; height: 590px; border: 1px solid rgba(65,104,245,.08); border-radius: 50%; content: ""; box-shadow: 0 0 0 48px rgba(65,104,245,.025), 0 0 0 104px rgba(65,104,245,.02); pointer-events: none; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.03fr .97fr; align-items: center; gap: 76px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #4869dd; font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+    .eyebrow:before { width: 7px; height: 7px; border-radius: 99px; background: #4d72f4; content: ""; box-shadow: 0 0 0 4px rgba(77,114,244,.11); }
+    h1 { max-width: 620px; margin: 20px 0 20px; font-size: clamp(44px, 5.8vw, 70px); font-weight: 680; letter-spacing: -.065em; line-height: 1.03; }
+    h1 span { color: var(--blue); }
+    .hero-copy { max-width: 540px; margin: 0; color: #5d6c7e; font-size: 17px; line-height: 1.75; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 29px; }
+    .btn { display: inline-flex; min-height: 45px; align-items: center; justify-content: center; gap: 9px; padding: 0 17px; border: 1px solid transparent; border-radius: 11px; font-size: 13px; font-weight: 700; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--blue); color: white; box-shadow: 0 8px 20px rgba(65,104,245,.24); }
+    .btn-primary:hover { background: var(--blue-dark); box-shadow: 0 10px 24px rgba(65,104,245,.3); }
+    .btn-secondary { border-color: #d7dee6; background: rgba(255,255,255,.74); color: #34465a; }
+    .arrow { font-size: 16px; line-height: 1; }
+    .hero-note { display: flex; align-items: center; gap: 9px; margin-top: 25px; color: #8995a2; font-size: 11px; }
+    .hero-note svg { flex: 0 0 auto; }
+    .demo-shell { position: relative; padding: 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 21px; background: linear-gradient(145deg, #263c51, #122332 65%); box-shadow: 0 28px 75px rgba(18,35,50,.22); transform: rotate(.5deg); }
+    .demo-shell:after { position: absolute; z-index: -1; right: -22px; bottom: -25px; width: 70%; height: 65%; border-radius: 50%; background: rgba(78,109,244,.26); content: ""; filter: blur(40px); }
+    .demo-window { overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 13px; background: #101d29; color: #e9f0f5; }
+    .demo-head { display: flex; align-items: center; gap: 7px; padding: 13px 15px; border-bottom: 1px solid rgba(255,255,255,.08); color: #9aaebd; font-family: var(--mono); font-size: 10px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #fc786f; }
+    .dot:nth-child(2) { background: #f2c268; }
+    .dot:nth-child(3) { background: #72d1a2; }
+    .demo-head span:last-child { margin-left: auto; }
+    .demo-content { padding: 21px; }
+    .label { color: #7e93a4; font-size: 9px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .state { margin-top: 9px; padding: 12px 13px; border: 1px solid rgba(255,255,255,.08); border-radius: 9px; background: rgba(255,255,255,.035); color: #e0e8ef; font-size: 12px; line-height: 1.6; }
+    .demo-divider { display: flex; align-items: center; gap: 9px; margin: 15px 0; color: #8398a8; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .demo-divider:before, .demo-divider:after { height: 1px; flex: 1; background: rgba(255,255,255,.09); content: ""; }
+    .result-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .result-top strong { font-size: 13px; font-weight: 680; }
+    .tag { padding: 4px 8px; border: 1px solid rgba(133,231,202,.19); border-radius: 20px; background: rgba(133,231,202,.08); color: var(--mint); font-family: var(--mono); font-size: 9px; }
+    .prob-row { display: grid; grid-template-columns: 72px 1fr 39px; align-items: center; gap: 9px; margin-top: 9px; color: #b2c0cb; font-size: 10px; }
+    .track { height: 5px; overflow: hidden; border-radius: 10px; background: #2a3b49; }
+    .fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5278ff, #8fa7ff); }
+    .prob-row:first-of-type .fill { background: linear-gradient(90deg, #5a7cff, #8de6ca); }
+    .prob-row code { color: #e0e8ef; font-family: var(--mono); font-size: 9px; text-align: right; }
+    .demo-foot { display: flex; justify-content: space-between; margin-top: 19px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); color: #8398a8; font-family: var(--mono); font-size: 9px; }
+    .quickfacts { display: flex; flex-wrap: wrap; gap: 0; margin-top: 40px; }
+    .fact { padding: 0 22px; border-left: 1px solid #d9e0e6; color: #758394; font-size: 11px; }
+    .fact:first-child { padding-left: 0; border: 0; }
+    .fact strong { color: #2a3e53; font-size: 13px; }
+    section { padding: 90px 0; }
+    .section-head { max-width: 710px; margin-bottom: 38px; }
+    .section-kicker { margin-bottom: 10px; color: #5977df; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h2 { margin: 0; font-size: clamp(29px, 4vw, 43px); font-weight: 660; letter-spacing: -.048em; line-height: 1.14; }
+    .section-intro { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.75; }
+    .how { border-top: 1px solid var(--line); background: #fff; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    .step { min-height: 211px; padding: 21px; border: 1px solid #e3e8ee; border-radius: 14px; background: linear-gradient(160deg,#fff,#fbfcfd); }
+    .step-no { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid #d9e2ff; border-radius: 9px; background: #f1f4ff; color: var(--blue); font-family: var(--mono); font-size: 11px; font-weight: 700; }
+    .step h3 { margin: 19px 0 7px; font-size: 16px; letter-spacing: -.02em; }
+    .step p { margin: 0; color: #6b7888; font-size: 12px; line-height: 1.7; }
+    .flowline { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 26px; color: #8190a0; font-family: var(--mono); font-size: 10px; }
+    .flow-pill { padding: 8px 12px; border: 1px solid #e1e7ed; border-radius: 8px; background: #f8fafc; color: #43556a; }
+    .flow-arrow { color: #a1adba; }
+    .types { background: var(--paper); }
+    .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .type-card { position: relative; overflow: hidden; min-height: 224px; padding: 24px; border: 1px solid #dfe5eb; border-radius: 15px; background: #fff; }
+    .type-card:after { position: absolute; top: -35px; right: -37px; width: 120px; height: 120px; border: 1px solid rgba(65,104,245,.09); border-radius: 50%; content: ""; box-shadow: 0 0 0 16px rgba(65,104,245,.025), 0 0 0 33px rgba(65,104,245,.02); }
+    .type-icon { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #dfe5ff; border-radius: 10px; background: #f2f4ff; color: var(--blue); font-family: var(--mono); font-size: 15px; font-weight: 800; }
+    .type-card:nth-child(2) .type-icon { border-color: #d3f1e8; background: #effaf6; color: #229d77; }
+    .type-card:nth-child(3) .type-icon { border-color: #f5e7ce; background: #fff8eb; color: #c38625; }
+    .type-card h3 { margin: 16px 0 5px; font-size: 19px; letter-spacing: -.035em; }
+    .type-card p { max-width: 300px; margin: 0; color: #6b7888; font-size: 12px; line-height: 1.7; }
+    .type-out { display: inline-flex; margin-top: 17px; padding: 5px 8px; border: 1px solid #e5e9ee; border-radius: 6px; background: #fafbfc; color: #59697c; font-family: var(--mono); font-size: 9px; }
+    .example { background: #fff; }
+    .example-grid { display: grid; grid-template-columns: .75fr 1.25fr; gap: 42px; align-items: start; }
+    .example-copy { padding-top: 4px; }
+    .example-copy h3 { margin: 0 0 11px; font-size: 22px; letter-spacing: -.04em; }
+    .example-copy p { margin: 0; color: #657486; font-size: 13px; line-height: 1.8; }
+    .mini-list { display: grid; gap: 11px; margin-top: 22px; }
+    .mini-list div { display: flex; gap: 10px; color: #506175; font-size: 12px; }
+    .check { color: #2d9c78; font-weight: 800; }
+    .code-card { overflow: hidden; border: 1px solid #263746; border-radius: 13px; background: #101d29; box-shadow: var(--shadow); }
+    .code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,.09); color: #aab9c5; font-family: var(--mono); font-size: 10px; }
+    .copy-btn { padding: 6px 9px; border: 1px solid rgba(255,255,255,.15); border-radius: 7px; background: transparent; color: #d4dee6; cursor: pointer; font-family: var(--sans); font-size: 10px; }
+    .copy-btn:hover { background: rgba(255,255,255,.08); }
+    pre { overflow: auto; margin: 0; padding: 18px; color: #d6e2eb; font-family: var(--mono); font-size: 10px; line-height: 1.8; tab-size: 2; }
+    .code-muted { color: #8da2b3; }
+    .code-green { color: #91e4bd; }
+    .code-blue { color: #93b4ff; }
+    .code-gold { color: #ebcd85; }
+    .security-note { display: flex; gap: 11px; margin-top: 18px; padding: 13px 14px; border: 1px solid #e8e3d7; border-radius: 9px; background: #fffcf5; color: #746747; font-size: 11px; line-height: 1.65; }
+    .security-note strong { color: #66552d; }
+    .start { padding: 82px 0; background: var(--night); color: #fff; }
+    .start .section-kicker { color: #95a9ff; }
+    .start h2 { color: #f1f6fa; }
+    .start .section-intro { color: #a5b4c1; }
+    .start-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 55px; align-items: center; }
+    .checklist { display: grid; gap: 17px; margin: 26px 0 0; padding: 0; list-style: none; }
+    .checklist li { display: grid; grid-template-columns: 25px 1fr; gap: 12px; color: #c7d3dd; font-size: 12px; line-height: 1.7; }
+    .checklist b { color: #eaf1f5; }
+    .list-num { display: grid; width: 23px; height: 23px; place-items: center; border: 1px solid rgba(149,169,255,.35); border-radius: 7px; background: rgba(78,109,244,.13); color: #a8b8ff; font-family: var(--mono); font-size: 10px; }
+    .boundary { padding: 24px; border: 1px solid rgba(255,255,255,.12); border-radius: 15px; background: linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025)); }
+    .boundary-label { color: #9cadbd; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .boundary h3 { margin: 14px 0 8px; color: white; font-size: 18px; letter-spacing: -.025em; }
+    .boundary p { margin: 0; color: #a7b5c1; font-size: 12px; line-height: 1.8; }
+    .boundary-rule { height: 1px; margin: 20px 0; background: rgba(255,255,255,.11); }
+    .boundary .btn { margin-top: 19px; }
+    .faq { background: var(--paper); }
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    details { padding: 18px 20px; border: 1px solid #e0e6ec; border-radius: 12px; background: #fff; }
+    summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; font-size: 13px; font-weight: 680; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary:after { color: var(--blue); content: "+"; font-family: var(--mono); font-size: 17px; font-weight: 400; }
+    details[open] summary:after { content: "−"; }
+    details p { margin: 11px 0 0; color: #6b7888; font-size: 12px; line-height: 1.75; }
+    .footer { padding: 25px 0; border-top: 1px solid #e1e6eb; background: #f8f9fa; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; color: #8290a0; font-size: 10px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer a { color: #647488; text-decoration: none; }
+    .footer a:hover { color: var(--blue-dark); }
+    :focus-visible { outline: 3px solid rgba(65,104,245,.5); outline-offset: 3px; }
+    @media (max-width: 900px) {
+      .hero-grid { gap: 42px; }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .example-grid { grid-template-columns: 1fr; gap: 27px; }
+      .start-grid { gap: 34px; }
+    }
+    @media (max-width: 680px) {
+      .wrap { width: min(100% - 34px, 540px); }
+      .nav { height: 63px; }
+      .nav-links { gap: 12px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-cta { padding: 8px 11px; font-size: 11px !important; }
+      .hero { padding: 55px 0 62px; }
+      .hero-grid { grid-template-columns: 1fr; gap: 37px; }
+      h1 { font-size: clamp(43px, 11vw, 61px); }
+      .hero-copy { font-size: 15px; }
+      .demo-shell { width: min(100%, 460px); justify-self: center; transform: none; }
+      .quickfacts { margin-top: 29px; }
+      .fact { padding-inline: 12px; font-size: 10px; }
+      .fact strong { font-size: 11px; }
+      section { padding: 65px 0; }
+      .steps, .type-grid, .faq-grid, .start-grid { grid-template-columns: 1fr; }
+      .step { min-height: auto; }
+      .flowline { flex-wrap: wrap; gap: 7px; font-size: 8px; }
+      .flow-pill { padding: 7px 8px; }
+      .type-card { min-height: 200px; }
+      .start { padding: 65px 0; }
+      .boundary { padding: 20px; }
+      pre { font-size: 9px; padding: 14px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *:before, *:after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="Jev guide home">
+        <span class="brand-mark">J</span>
+        <span>Jev Model <small>Field guide</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#question-types">Question types</a>
+        <a href="#example">API example</a>
+        <a class="nav-cta" href="https://api.typesafe.ai/docs" target="_blank" rel="noreferrer">Official API docs <span class="arrow">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">A practical guide to System One</div>
+          <h1>Give software<br>a <span>decision</span><br>it can use.</h1>
+          <p class="hero-copy">Jev is TypeSafe AI’s System One model, built for bounded decisions inside software. Give it real-world context and clear questions; get structured answers and probability signals your code can work with.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://console.typesafe.ai/login" target="_blank" rel="noreferrer">Try the playground <span class="arrow">↗</span></a>
+            <a class="btn btn-secondary" href="#how-it-works">See how it works <span class="arrow">↓</span></a>
+          </div>
+          <div class="hero-note">
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.5 17 5v4.7c0 4.1-2.8 6.7-7 7.8-4.2-1.1-7-3.7-7-7.8V5l7-2.5Z" stroke="#8293A5" stroke-width="1.4"/><path d="m7 9.8 2 2 4-4" stroke="#8293A5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Your application keeps control of policy, thresholds, and actions.
+          </div>
+          <div class="quickfacts" aria-label="Jev at a glance">
+            <div class="fact"><strong>One state</strong><br>shared context</div>
+            <div class="fact"><strong>Typed answers</strong><br>built for code</div>
+            <div class="fact"><strong>Parallel questions</strong><br>one request</div>
+          </div>
+        </div>
+
+        <div class="demo-shell" aria-label="Illustrative example of a Jev decision">
+          <div class="demo-window">
+            <div class="demo-head"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span>decision.preview</span></div>
+            <div class="demo-content">
+              <div class="label">State · support ticket</div>
+              <div class="state">“I was billed twice for my annual plan. I need the extra charge refunded today.”</div>
+              <div class="demo-divider">Jev evaluates</div>
+              <div class="result-top"><strong>Suggested queue</strong><span class="tag">choice</span></div>
+              <div class="prob-row"><span>billing</span><span class="track"><span class="fill" style="display:block;width:82%"></span></span><code>0.82</code></div>
+              <div class="prob-row"><span>technical</span><span class="track"><span class="fill" style="display:block;width:12%"></span></span><code>0.12</code></div>
+              <div class="prob-row"><span>sales</span><span class="track"><span class="fill" style="display:block;width:6%"></span></span><code>0.06</code></div>
+              <div class="demo-foot"><span>illustrative result</span><span>your code decides next</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="how" id="how-it-works">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">The mental model</div>
+          <h2>Context in. Typed decisions out.</h2>
+          <p class="section-intro">Jev evaluates named questions against the same state in a single request. Your software receives answers in a predictable shape, then decides what to do with them.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><span class="step-no">01</span><h3>Prepare the state</h3><p>Share the relevant context: a ticket, message, order, incident, or structured record. Keep it focused on the decision.</p></article>
+          <article class="step"><span class="step-no">02</span><h3>Define questions</h3><p>Ask specific questions and choose the answer type. Add options or an ordered rubric when the type needs them.</p></article>
+          <article class="step"><span class="step-no">03</span><h3>Read the results</h3><p>Answers come back under the question names you chose, with probabilities and confidence fields where supported.</p></article>
+          <article class="step"><span class="step-no">04</span><h3>Apply your rules</h3><p>Your application uses its own thresholds, permissions, and review paths to route, continue, or ask a person.</p></article>
+        </div>
+        <div class="flowline" aria-label="State plus questions produces typed answers, which your code uses">
+          <span class="flow-pill">state</span><span>+</span><span class="flow-pill">typed questions</span><span class="flow-arrow">→</span><span class="flow-pill">Jev</span><span class="flow-arrow">→</span><span class="flow-pill">answers</span><span class="flow-arrow">→</span><span class="flow-pill">your application</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="types" id="question-types">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">Three useful primitives</div>
+          <h2>Choose the shape of the answer.</h2>
+          <p class="section-intro">Break a workflow into small, clear decisions. You can mix these question types against one state.</p>
+        </div>
+        <div class="type-grid">
+          <article class="type-card">
+            <span class="type-icon">↗</span><h3>Choice</h3>
+            <p>Choose one option from a set you define. Useful for classifying a request or routing it to an approved team.</p>
+            <span class="type-out">selected option · confidence · probabilities</span>
+          </article>
+          <article class="type-card">
+            <span class="type-icon">▥</span><h3>Score</h3>
+            <p>Rate something on an ordered rubric, such as urgency from “can wait” to “needs attention today.”</p>
+            <span class="type-out">score · rubric · confidence · probabilities</span>
+          </article>
+          <article class="type-card">
+            <span class="type-icon">?</span><h3>Noul</h3>
+            <p>Evaluate a yes-or-no question or statement. The answer is the probability of “yes” or “true.”</p>
+            <span class="type-out">yes probability · 0 to 1</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example" id="example">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">A concrete example</div>
+          <h2>Ask once. Get answers for the workflow.</h2>
+          <p class="section-intro">Here, a support ticket is classified, scored for urgency, and checked for escalation in the same API call.</p>
+        </div>
+        <div class="example-grid">
+          <div class="example-copy">
+            <h3>Ticket triage</h3>
+            <p>The state holds the customer’s message. Each question has a stable ID so application code can read the corresponding answer directly.</p>
+            <div class="mini-list">
+              <div><span class="check">✓</span><span>Choice routes to billing, technical, or sales.</span></div>
+              <div><span class="check">✓</span><span>Score uses an explicit low-to-high urgency scale.</span></div>
+              <div><span class="check">✓</span><span>Noul estimates whether the case needs a human now.</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="code-card">
+              <div class="code-head"><span>POST /v1/systemone · cURL</span><button class="copy-btn" type="button" data-copy="request-code">Copy example</button></div>
+              <pre id="request-code"><code>curl -X POST https://api.typesafe.ai/v1/systemone \
+  -H <span class="code-green">"Authorization: Bearer $TYPESAFE_API_KEY"</span> \
+  -H <span class="code-green">"Content-Type: application/json"</span> \
+  -d <span class="code-gold">'{
+    "model": "jev-latest",
+    "state": "Billed twice; needs refund today.",
+    "questions": {
+      "route": {
+        "type": "choice",
+        "instructions": "Which team should own this?",
+        "criteria": {
+          "billing": "Payments, refunds, invoices",
+          "technical": "Bugs and product issues",
+          "sales": "Pricing and new business"
+        }
+      },
+      "urgency": {
+        "type": "score",
+        "instructions": "How urgent is this?",
+        "criteria": ["Can wait", "Soon", "Today"]
+      },
+      "escalate": {
+        "type": "noul",
+        "instructions": "Does a person need to review now?"
+      }
+    }
+  }'</span></code></pre>
+            </div>
+            <div class="security-note"><span aria-hidden="true">◈</span><span><strong>Keep your API key on the server.</strong> Store it as an environment variable; never put a live key in browser code or commit it to your repository.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="start" id="how-to-use">
+      <div class="wrap start-grid">
+        <div>
+          <div class="section-kicker">From first try to integration</div>
+          <h2>How to use Jev</h2>
+          <p class="section-intro">Prototype the decision before you wire it into a product. Use real examples, including ambiguous cases, to see where the signal helps.</p>
+          <ol class="checklist">
+            <li><span class="list-num">1</span><span><b>Pick a bounded decision.</b> Start with a workflow where the possible outcomes are known.</span></li>
+            <li><span class="list-num">2</span><span><b>Try it in the playground.</b> Enter sample state, add questions, and inspect the response.</span></li>
+            <li><span class="list-num">3</span><span><b>Create an API key.</b> Get access in your TypeSafe account and store the key in a server-side environment variable.</span></li>
+            <li><span class="list-num">4</span><span><b>Call the endpoint.</b> Send a JSON request to <code>POST https://api.typesafe.ai/v1/systemone</code> with Bearer authentication.</span></li>
+            <li><span class="list-num">5</span><span><b>Connect results to your code.</b> Set thresholds, fallback behavior, and human review according to your application’s policies.</span></li>
+          </ol>
+        </div>
+        <aside class="boundary">
+          <div class="boundary-label">A good division of work</div>
+          <h3>Use Jev for the decision. Use code for the action.</h3>
+          <p>Jev can provide a useful signal for routing, scoring, or review. Your application should validate the result and remain responsible for permissions, thresholds, and side effects.</p>
+          <div class="boundary-rule"></div>
+          <div class="boundary-label">When to reach for something else</div>
+          <p>For open-ended writing, detailed explanations, or multi-step plans, pair a decision model with a generative model that produces language. Jev’s focus is structured decisions.</p>
+          <a class="btn btn-primary" href="https://api.typesafe.ai/docs" target="_blank" rel="noreferrer">Read the API reference <span class="arrow">↗</span></a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">A few useful boundaries</div>
+          <h2>Good to know before you ship.</h2>
+        </div>
+        <div class="faq-grid">
+          <details><summary>Is Jev a chat assistant?</summary><p>Jev is designed to return structured decisions for software. It is not intended to replace a general-purpose model for open-ended conversation or writing.</p></details>
+          <details><summary>Are probabilities guarantees?</summary><p>No. Treat probabilities and confidence as signals to evaluate in your own workflow. Test on representative cases and decide how uncertain results should be handled.</p></details>
+          <details><summary>Can one request ask multiple questions?</summary><p>Yes. A request can include multiple named questions over the same state, and the response uses those names to match answers back to questions.</p></details>
+          <details><summary>Where can I find the latest API details?</summary><p>Check TypeSafe’s API reference for current authentication, model names, request fields, and response schemas. Product details can change over time.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>Jev Model field guide · An independent educational overview</span>
+      <div class="footer-links">
+        <a href="https://typesafe.ai/" target="_blank" rel="noreferrer">TypeSafe AI</a>
+        <a href="https://api.typesafe.ai/docs" target="_blank" rel="noreferrer">API reference</a>
+        <a href="https://console.typesafe.ai/login" target="_blank" rel="noreferrer">Playground / console</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const source = document.getElementById(button.dataset.copy);
+        if (!source || !navigator.clipboard) return;
+        try {
+          await navigator.clipboard.writeText(source.innerText);
+          const previous = button.textContent;
+          button.textContent = "Copied";
+          window.setTimeout(() => { button.textContent = previous; }, 1400);
+        } catch (_) {
+          button.textContent = "Copy unavailable";
+          window.setTimeout(() => { button.textContent = "Copy example"; }, 1600);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
